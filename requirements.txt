@@ -1,11 +1,13 @@
 lang-trans
 arabic-pronounce
-inflect == 4.1.0
-numba == 0.48
+inflect==4.1.0
+numba>=0.56
+llvmlite>=0.39
 pypinyin==0.39.0
-pyworld == 0.2.10
-PyYAML==5.4.1
-tgt == 1.4.4
+pyworld==0.2.10
+# PyYAML==5.4.1
+tgt==1.4.4
 tqdm==4.46.1
-unidecode == 1.1.1
+unidecode==1.1.1
 resampy==0.3.1
+librosa  # Added because it was missing
