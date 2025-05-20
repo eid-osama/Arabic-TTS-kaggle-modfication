@@ -40,6 +40,8 @@ def main(args, configs):
     # Prepare model
     model, optimizer = get_model(args, configs, device, train=True)
     model = nn.DataParallel(model)
+    # Ensure model is using float32 precision
+    model = model.float()
     num_param = get_param_num(model)
     Loss = FastSpeech2Loss(preprocess_config, model_config).to(device)
     print("Number of FastSpeech2 Parameters:", num_param)
@@ -67,6 +69,11 @@ def main(args, configs):
         model.module.load_state_dict(checkpoint["model"])  # Load model weights
         optimizer._optimizer.load_state_dict(checkpoint["optimizer"])  # Load optimizer state
         step = args.restore_step  # Restore step from the checkpoint
+        # Ensure optimizer state is using float32
+        for state in optimizer._optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.float()
         print(f"Resuming training from step {step}")
     else:
         step = args.restore_step + 1  # Start fresh or from the specified step
@@ -89,6 +96,17 @@ def main(args, configs):
         for batchs in loader:
             for batch in batchs:
                 batch = to_device(batch, device)
+                
+                # Ensure batch tensors are float32 - with proper tuple handling
+                def convert_tensors_to_float32(item):
+                    if isinstance(item, torch.Tensor) and item.dtype == torch.float64:
+                        return item.float()
+                    elif isinstance(item, (list, tuple)):
+                        return type(item)(convert_tensors_to_float32(x) for x in item)
+                    else:
+                        return item
+                        
+                batch = convert_tensors_to_float32(batch)
 
                 # Forward
                 output = model(*(batch[2:]))
@@ -207,4 +225,7 @@ if __name__ == "__main__":
     train_config = yaml.load(open(args.train_config, "r"), Loader=yaml.FullLoader)
     configs = (preprocess_config, model_config, train_config)
 
+    # Set default dtype to float32 using the recommended method
+    torch.set_default_dtype(torch.float32)
+    
     main(args, configs)
