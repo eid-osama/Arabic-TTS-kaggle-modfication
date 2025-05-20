@@ -1,5 +1,4 @@
 lang-trans
-arabic-pronounce
 inflect==4.1.0
 numba>=0.56
 llvmlite>=0.39
