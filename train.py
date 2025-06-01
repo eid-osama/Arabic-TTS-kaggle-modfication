@@ -108,8 +108,25 @@ def main(args, configs):
                         
                 batch = convert_tensors_to_float32(batch)
 
-                # Forward
-                output = model(*(batch[2:]))
+                # Extract sample ID for error logging
+                sample_id = batch[0] if isinstance(batch[0], (str, list)) else f"step_{step}"
+
+                # Forward with error handling
+                try:
+                    output = model(*(batch[2:]), sample_id=sample_id)
+                    
+                    # Check if sample was skipped due to tensor size mismatch
+                    if output is None:
+                        print(f"Skipping problematic sample at step {step}")
+                        continue
+                        
+                except Exception as e:
+                    print(f"Unexpected error at step {step}: {e}")
+                    # Log the error
+                    error_log_path = "training_errors.txt"
+                    with open(error_log_path, "a") as f:
+                        f.write(f"Step {step}, Sample ID: {sample_id}, Error: {str(e)}\n")
+                    continue
 
                 # Cal Loss
                 losses = Loss(batch, output)

@@ -118,51 +118,75 @@ class VarianceAdaptor(nn.Module):
         p_control=1.0,
         e_control=1.0,
         d_control=1.0,
+        sample_id=None,
     ):
+        try:
+            log_duration_prediction = self.duration_predictor(x, src_mask)
+            if self.pitch_feature_level == "phoneme_level":
+                pitch_prediction, pitch_embedding = self.get_pitch_embedding(
+                    x, pitch_target, src_mask, p_control
+                )
+                x = x + pitch_embedding
+            if self.energy_feature_level == "phoneme_level":
+                energy_prediction, energy_embedding = self.get_energy_embedding(
+                    x, energy_target, src_mask, p_control
+                )
+                x = x + energy_embedding
 
-        log_duration_prediction = self.duration_predictor(x, src_mask)
-        if self.pitch_feature_level == "phoneme_level":
-            pitch_prediction, pitch_embedding = self.get_pitch_embedding(
-                x, pitch_target, src_mask, p_control
-            )
-            x = x + pitch_embedding
-        if self.energy_feature_level == "phoneme_level":
-            energy_prediction, energy_embedding = self.get_energy_embedding(
-                x, energy_target, src_mask, p_control
-            )
-            x = x + energy_embedding
+            if duration_target is not None:
+                x, mel_len = self.length_regulator(x, duration_target, max_len)
+                duration_rounded = duration_target
+            else:
+                duration_rounded = torch.clamp(
+                    (torch.round(torch.exp(log_duration_prediction) - 1) * d_control),
+                    min=0,
+                )
+                x, mel_len = self.length_regulator(x, duration_rounded, max_len)
+                mel_mask = get_mask_from_lengths(mel_len)
 
-        if duration_target is not None:
-            x, mel_len = self.length_regulator(x, duration_target, max_len)
-            duration_rounded = duration_target
-        else:
-            duration_rounded = torch.clamp(
-                (torch.round(torch.exp(log_duration_prediction) - 1) * d_control),
-                min=0,
-            )
-            x, mel_len = self.length_regulator(x, duration_rounded, max_len)
-            mel_mask = get_mask_from_lengths(mel_len)
+            if self.pitch_feature_level == "frame_level":
+                pitch_prediction, pitch_embedding = self.get_pitch_embedding(
+                    x, pitch_target, mel_mask, p_control
+                )
+                x = x + pitch_embedding
+            if self.energy_feature_level == "frame_level":
+                energy_prediction, energy_embedding = self.get_energy_embedding(
+                    x, energy_target, mel_mask, p_control
+                )
+                x = x + energy_embedding
 
-        if self.pitch_feature_level == "frame_level":
-            pitch_prediction, pitch_embedding = self.get_pitch_embedding(
-                x, pitch_target, mel_mask, p_control
+            return (
+                x,
+                pitch_prediction,
+                energy_prediction,
+                log_duration_prediction,
+                duration_rounded,
+                mel_len,
+                mel_mask,
             )
-            x = x + pitch_embedding
-        if self.energy_feature_level == "frame_level":
-            energy_prediction, energy_embedding = self.get_energy_embedding(
-                x, energy_target, mel_mask, p_control
-            )
-            x = x + energy_embedding
-
-        return (
-            x,
-            pitch_prediction,
-            energy_prediction,
-            log_duration_prediction,
-            duration_rounded,
-            mel_len,
-            mel_mask,
-        )
+        
+        except RuntimeError as e:
+            if "size of tensor" in str(e) and "must match" in str(e):
+                # Log the problematic sample
+                error_log_path = "/content/drive/MyDrive/clar_log/problematic_samples.txt"
+                with open(error_log_path, "a") as f:
+                    error_msg = f"Sample ID: {sample_id}, Error: {str(e)}, "
+                    error_msg += f"x_shape: {x.shape}, "
+                    if pitch_target is not None:
+                        error_msg += f"pitch_target_shape: {pitch_target.shape}, "
+                    if energy_target is not None:
+                        error_msg += f"energy_target_shape: {energy_target.shape}, "
+                    if duration_target is not None:
+                        error_msg += f"duration_target_shape: {duration_target.shape}"
+                    error_msg += "\n"
+                    f.write(error_msg)
+                
+                print(f"Skipping problematic sample: {sample_id}")
+                # Return None to indicate this sample should be skipped
+                return None
+            else:
+                # Re-raise other RuntimeErrors
+                raise e
 
 
 class LengthRegulator(nn.Module):

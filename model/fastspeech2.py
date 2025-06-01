@@ -55,6 +55,7 @@ class FastSpeech2(nn.Module):
         p_control=1.0,
         e_control=1.0,
         d_control=1.0,
+        sample_id=None,
     ):
         src_masks = get_mask_from_lengths(src_lens, max_src_len)
         mel_masks = (
@@ -70,15 +71,7 @@ class FastSpeech2(nn.Module):
                 -1, max_src_len, -1
             )
 
-        (
-            output,
-            p_predictions,
-            e_predictions,
-            log_d_predictions,
-            d_rounded,
-            mel_lens,
-            mel_masks,
-        ) = self.variance_adaptor(
+        variance_result = self.variance_adaptor(
             output,
             src_masks,
             mel_masks,
@@ -89,7 +82,22 @@ class FastSpeech2(nn.Module):
             p_control,
             e_control,
             d_control,
+            sample_id=sample_id,
         )
+        
+        # Check if variance_adaptor returned None (sample was skipped)
+        if variance_result is None:
+            return None
+
+        (
+            output,
+            p_predictions,
+            e_predictions,
+            log_d_predictions,
+            d_rounded,
+            mel_lens,
+            mel_masks,
+        ) = variance_result
 
         output, mel_masks = self.decoder(output, mel_masks)
         output = self.mel_linear(output)
