@@ -1,11 +1,19 @@
 dataset: "Arabic"
 
 path:
+<<<<<<< HEAD
   corpus_path: "/content/drive/MyDrive/ClArTTS"
   lexicon_path: "lexicon/librispeech-lexicon.txt"
   raw_path: "/content/drive/MyDrive/ClArTTS_preprocessed/raw_data/Arabic"
   preprocessed_path: "/content/drive/MyDrive/ClArTTS_preprocessed/preprocessed_data/Arabic"
   stats_path: "/content/drive/MyDrive/ClArTTS_preprocessed/preprocessed_data/Arabic"
+=======
+  corpus_path: "/content/drive/MyDrive/arabic-speech-corpus"
+  lexicon_path: "lexicon/librispeech-lexicon.txt"
+  raw_path: "/content/drive/MyDrive/Corpus_preprocess/raw_data/Arabic"
+  preprocessed_path: "/content/drive/MyDrive/Corpus_preprocess/preprocessed_data/Arabic"
+  stats_path: "/content/drive/MyDrive/Corpus_preprocess/preprocessed_data/Arabic"
+>>>>>>> 2ed4de2f71e675ba6484ccf6de3d6ea789722bb7
 
 preprocessing:
   val_size: 14
