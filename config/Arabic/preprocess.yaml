@@ -1,11 +1,11 @@
 dataset: "Arabic"
 
 path:
-  corpus_path: "/content/drive/MyDrive/ClArTTS"
+  corpus_path: "/kaggle/input/corpus-preprocess/Corpus_preprocess"
   lexicon_path: "lexicon/librispeech-lexicon.txt"
-  raw_path: "/content/drive/MyDrive/ClArTTS_preprocessed/raw_data/Arabic"
-  preprocessed_path: "/content/drive/MyDrive/ClArTTS_preprocessed/preprocessed_data/Arabic"
-  stats_path: "/content/drive/MyDrive/ClArTTS_preprocessed/preprocessed_data/Arabic"
+  raw_path: "/kaggle/input/corpus-preprocess/Corpus_preprocess/raw_data/Arabic"
+  preprocessed_path: "/kaggle/input/corpus-preprocess/Corpus_preprocess/preprocessed_data/Arabic"
+  stats_path: "/kaggle/input/corpus-preprocess/Corpus_preprocess/preprocessed_data/Arabic"
   
 
 preprocessing:
