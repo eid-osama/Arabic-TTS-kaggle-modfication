@@ -1,7 +1,7 @@
 path:
-  ckpt_path: "/content/drive/MyDrive/Speech/TTS/ckpt/Arabicv3"
-  log_path: "/content/drive/MyDrive/Speech/TTS/log/Arabicv3"
-  result_path: "/content/drive/MyDrive/Speech/TTS/result/Arabicv3"
+  ckpt_path: "/kaggle/working/Speech/TTS/ckpt/Arabicv3"
+  log_path: "/kaggle/working/Speech/TTS/log/Arabicv3"
+  result_path: "/kaggle/working/Speech/TTS/result/Arabicv3"
 optimizer:
   batch_size: 1
   betas: [0.9, 0.98]
